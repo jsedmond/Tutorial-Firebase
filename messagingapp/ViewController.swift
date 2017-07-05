@@ -7,13 +7,17 @@
 //
 
 import UIKit
+import FirebaseDatabase
 
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     
     @IBOutlet weak var tableView: UITableView!
     
-    var postData = ["Message1", "Message2", "Message3"]
+    var ref:DatabaseReference?
+    var databaseHandle:DatabaseHandle?
+    
+    var postData = [String]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,6 +26,24 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.delegate = self
         tableView.dataSource = self
         
+        // Set the firebase reference
+        ref = Database.database().reference()
+        
+        // Retrieve the posts and listen for changes
+        databaseHandle = ref?.child("Posts").observe(.childAdded, with: { (snapshot) in
+            
+            // Try to convert the value of the data to a string
+            let post = snapshot.value as? String
+            
+            if let actualPost = post {
+                
+                // Append the data to our postData array
+                self.postData.append(actualPost)
+                
+                // Reload the tableview
+                self.tableView.reloadData()
+            }
+        })
     }
 
     override func didReceiveMemoryWarning() {
